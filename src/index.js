@@ -23,32 +23,41 @@ app.post("/repositories", (request, response) => {
     likes: 0
   };
 
-  return response.json(repository);
+  repositories.push(repository);
+
+  return response.status(201).json(repository);
 });
 
 app.put("/repositories/:id", (request, response) => {
   const { id } = request.params;
-  const updatedRepository = request.body;
+  const { url, title, techs } = request.body;
 
-  repositoryIndex = repositories.findindex(repository => repository.id === id);
+  const findRepositoryIndex = repositories.findIndex(repository => 
+    repository.id === id);
+  
+    if(findRepositoryIndex === -1){
+      return response.status(404).json({error: 'Repository does not exists.'});
+    }
 
-  if (repositoryIndex < 0) {
-    return response.status(404).json({ error: "Repository not found" });
-  }
+    const repository = {
+      id,
+      title,
+      url,
+      techs,
+      likes: repositories[findRepositoryIndex].likes,
+    };
 
-  const repository = { ...repositories[repositoryIndex], ...updatedRepository };
+    repositories[findRepositoryIndex] = repository;
 
-  repositories[repositoryIndex] = repository;
-
-  return response.json(repository);
+    return response.json(repository);
 });
 
 app.delete("/repositories/:id", (request, response) => {
   const { id } = request.params;
 
-  repositoryIndex = repositories.findIndex(repository => repository.id === id);
+  const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (repositoryIndex > 0) {
+  if (repositoryIndex === -1) {
     return response.status(404).json({ error: "Repository not found" });
   }
 
@@ -60,15 +69,15 @@ app.delete("/repositories/:id", (request, response) => {
 app.post("/repositories/:id/like", (request, response) => {
   const { id } = request.params;
 
-  repositoryIndex = repositories.findIndex(repository => repository.id === id);
+  const repository = repositories.find(repository => repository.id === id);
 
-  if (repositoryIndex < 0) {
+  if (!repository) {
     return response.status(404).json({ error: "Repository not found" });
   }
+  
+  repository.likes++;
 
-  const likes = ++repositories[repositoryIndex].likes;
-
-  return response.json('likes');
+  return response.json(repository);
 });
 
 module.exports = app;
